@@ -28,6 +28,7 @@ import dev.rosewood.rosestacker.utils.ItemUtils;
 import dev.rosewood.rosestacker.utils.PersistentDataUtils;
 import dev.rosewood.rosestacker.utils.StackerUtils;
 import dev.rosewood.rosestacker.utils.ThreadUtils;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -43,6 +44,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
@@ -272,10 +274,10 @@ public class StackingThread implements StackingLogic, AutoCloseable {
                     if (this.itemDynamicWallDetection)
                         visible &= EntityUtils.hasLineOfSight(player, entity, 0.75, true);
                 } else if (this.dynamicEntityTags) {
-                     visible = distanceSqrd < this.entityDynamicViewRangeSqrd;
-                     if (this.entityDynamicWallDetection)
-                         visible &= EntityUtils.hasLineOfSight(player, entity, 0.75, true);
-                 } else continue;
+                    visible = distanceSqrd < this.entityDynamicViewRangeSqrd;
+                    if (this.entityDynamicWallDetection)
+                        visible &= EntityUtils.hasLineOfSight(player, entity, 0.75, true);
+                } else continue;
 
                 if (entity.getType() != EntityType.ARMOR_STAND && entity instanceof LivingEntity livingEntity) {
                     StackedEntity stackedEntity = this.getStackedEntity(livingEntity);
@@ -318,6 +320,19 @@ public class StackingThread implements StackingLogic, AutoCloseable {
 
         if (this.hologramTask != null)
             this.hologramTask.cancel();
+
+        // Flush remaining blocks and entities, this typically happens when chunks are still loaded and Bukkit#unloadWorld is called
+        this.saveChunkEntities(null,
+                stackedEntities.values().stream().map(stackedEntity -> (Entity) stackedEntity.getEntity()).toList(), false);
+
+        for (Chunk chunk : this.stackChunkData.keySet()) {
+            this.saveChunkBlocks(chunk, false);
+        }
+
+        // clearStored was false on the two save methods above as we can clear it in one go which is more efficient
+        this.stackChunkData.clear();
+        this.stackedEntities.clear();
+
     }
 
     @Override
