@@ -323,15 +323,11 @@ public class StackingThread implements StackingLogic, AutoCloseable {
 
         // Flush remaining blocks and entities, this typically happens when chunks are still loaded and Bukkit#unloadWorld is called
         this.saveChunkEntities(null,
-                stackedEntities.values().stream().map(stackedEntity -> (Entity) stackedEntity.getEntity()).toList(), false);
+                stackedEntities.values().stream().map(stackedEntity -> (Entity) stackedEntity.getEntity()).toList(), true);
 
         for (Chunk chunk : this.stackChunkData.keySet()) {
-            this.saveChunkBlocks(chunk, false);
+            this.saveChunkBlocks(chunk, true);
         }
-
-        // clearStored was false on the two save methods above as we can clear it in one go which is more efficient
-        this.stackChunkData.clear();
-        this.stackedEntities.clear();
 
     }
 
